@@ -154,8 +154,7 @@ export const register: Register = on => {
       if (isNewer || (await read($, skillStarted))) {
         await update($, pendingSince, () => null)
         await update($, skillStarted, () => false)
-        const { startedAt } = await $.session.usage()
-        if (written !== null && written.mtimeMs >= startedAt) clearAndContinue($)
+        if (written !== null) clearAndContinue($)
         else $.ui.toast(`${FILE} was not written, so the session was not cleared`)
       }
     }
@@ -180,7 +179,8 @@ export const register: Register = on => {
           await update($, focus, () => args)
           await update($, agentCount, () => count)
           await update($, waiting, () => true)
-          return { drop: 'Waiting for subagents, then handing off' }
+          // Refused here, so nothing depends on the model: no turn runs until the subagents finish.
+          return { drop: 'Handoff queued. It starts by itself when the subagents finish.' }
         }
         const now = await $.clock.now()
         await update($, waiting, () => false)
