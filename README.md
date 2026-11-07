@@ -24,13 +24,13 @@ Check that `claude --version` is 2.1.300 or newer, and run `claude update` if it
 
 ## What you get
 
-**The gauge.** A line above the prompt with the tokens in the current context.
+**The gauge.** A line above the prompt with the tokens in the current context, for example `79K · clear head`.
 
 | Colour | On a 1M window | On a 200K window | What it says |
 |---|---|---|---|
-| Green | under 500K | under 100K | the reading |
-| Yellow | 500K | 100K | wrap up soon |
-| Red | 700K | 140K | run `/archiwright:handoff` |
+| Green | under 500K | under 100K | `clear head` |
+| Yellow | 500K | 100K | `dumb zone is close, wrap up` |
+| Red | 700K | 140K | `DUMB ZONE` |
 
 The lines are 50% and 70% of the window. They are our rule: nobody has measured where a model starts getting worse, so change them if your experience differs.
 
@@ -38,8 +38,8 @@ The model cannot see its own usage, so each time a line is crossed the plugin te
 
 **The button.** Once the gauge is yellow or red, one action writes the handoff, clears the session and continues in the fresh one.
 
-- Terminal: `Press 0 to hand off in a new session`, then press 0 again. Asking twice means a stray digit cannot wipe a session, and the key only counts while the prompt is empty, so normal typing is not affected.
-- Desktop: `Click to hand off in a new session`.
+- Terminal: `Press 0 to hand off to a new session`, then press 0 again. Asking twice means a stray digit cannot wipe a session, and the key only counts while the prompt is empty, so normal typing is not affected.
+- Desktop: `Click to hand off to a new session`.
 
 Nothing clears unless you press it. To get back to the old session, use `/resume`.
 

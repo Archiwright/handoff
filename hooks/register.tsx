@@ -39,9 +39,9 @@ const chainNote = (path: string) =>
 const short = (tokens: number) => `${Math.round(tokens / 1000)}K`
 
 const advice = (r: Reading) => {
-  if (r.level === 'red') return `${short(r.tokens)} context: run ${COMMAND}`
-  if (r.level === 'yellow') return `${short(r.tokens)} context: wrap up soon`
-  return `${short(r.tokens)} context`
+  if (r.level === 'red') return `${short(r.tokens)} · DUMB ZONE`
+  if (r.level === 'yellow') return `${short(r.tokens)} · dumb zone is close, wrap up`
+  return `${short(r.tokens)} · clear head`
 }
 
 // One file per session, so sessions in the same project cannot touch each other's work.
@@ -225,8 +225,8 @@ export const register: Register = on => {
     await update($, told, () => now.level)
     const note =
       now.level === 'red'
-        ? `The context gauge reads ${short(now.tokens)} tokens, past the red line. Tell the person this once, in one short sentence at the start of your reply, and suggest they run ${COMMAND} before starting anything new.`
-        : `The context gauge reads ${short(now.tokens)} tokens, past the yellow line. Tell the person this once, in one short sentence at the start of your reply, and suggest they finish the current task and then run ${COMMAND}.`
+        ? `The context gauge reads ${short(now.tokens)} tokens, past the red line. Tell the person this once, in one short sentence at the start of your reply, and suggest they hand off to a new session before starting anything new.`
+        : `The context gauge reads ${short(now.tokens)} tokens, past the yellow line. Tell the person this once, in one short sentence at the start of your reply, and suggest they finish the current task and then hand off to a new session.`
 
     return next({ ...e, context: [...(e.context ?? []), note] })
   })
@@ -244,7 +244,7 @@ export const register: Register = on => {
     const { Box, Button, Text } = $.ui.resolve(e)
     const color = r.level === 'red' ? 'error' : r.level === 'yellow' ? 'warning' : 'success'
 
-    const action = hasFile ? 'continue in a new session' : 'hand off in a new session'
+    const action = hasFile ? 'continue in a new session' : 'hand off to a new session'
     const label = isWaiting
       ? `${onTerminal ? 'Press 0' : 'Click'} to hand off now`
       : !onTerminal
