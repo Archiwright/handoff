@@ -74,11 +74,14 @@ async function unfinishedAgents($: EngineInterface) {
 }
 
 // Runs only from a person's click, key press or typed command. Not awaited: the calls queue until the session is idle.
-function clearAndContinue($: EngineInterface) {
+async function clearAndContinue($: EngineInterface) {
+  const message = await read($, focus)
+  await update($, focus, () => '')
+  const text = message ? `${PICKUP}. User handoff message: ${message}` : PICKUP
   $.ui.toast('Clearing, then reading ' + FILE)
   void $.command
     .run({ command: 'clear' })
-    .then(() => $.prompt.submit({ text: PICKUP }))
+    .then(() => $.prompt.submit({ text }))
     .catch((error: Error) => $.ui.toast(`Could not clear: ${error.message}`))
 }
 
@@ -89,7 +92,6 @@ async function writeThenClear($: EngineInterface) {
   await update($, skillStarted, () => false)
   $.ui.toast('Writing ' + FILE + ', then clearing')
   const args = await read($, focus)
-  await update($, focus, () => '')
   void $.command
     .run({ command: NAME, args })
     .catch((error: Error) => $.ui.toast(`Could not run the handoff: ${error.message}`))
@@ -104,7 +106,7 @@ async function handOff($: EngineInterface) {
     return
   }
   if (await read($, ready)) {
-    clearAndContinue($)
+    await clearAndContinue($)
     return
   }
   await writeThenClear($)
@@ -154,7 +156,7 @@ export const register: Register = on => {
       if (isNewer || (await read($, skillStarted))) {
         await update($, pendingSince, () => null)
         await update($, skillStarted, () => false)
-        if (written !== null) clearAndContinue($)
+        if (written !== null) await clearAndContinue($)
         else $.ui.toast(`${FILE} was not written, so the session was not cleared`)
       }
     }
@@ -173,10 +175,11 @@ export const register: Register = on => {
     if (e.command?.name === NAME) {
       // Typed by a person: the same one action as the button. Typing it again while waiting hands off now.
       if ((await read($, pendingSince)) === null) {
+        const args = e.command.args
+        const isWaiting = await read($, waiting)
+        if (args || !isWaiting) await update($, focus, () => args)
         const count = await unfinishedAgents($)
-        if (count > 0 && !(await read($, waiting))) {
-          const args = e.command.args
-          await update($, focus, () => args)
+        if (count > 0 && !isWaiting) {
           await update($, agentCount, () => count)
           await update($, waiting, () => true)
           // Refused here, so nothing depends on the model: no turn runs until the subagents finish.
@@ -196,6 +199,7 @@ export const register: Register = on => {
       await update($, pendingSince, () => null)
       await update($, waiting, () => false)
       await update($, armed, () => false)
+      await update($, focus, () => '')
     }
     await refresh($)
     const now = await read($, reading)
