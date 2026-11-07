@@ -1,7 +1,7 @@
 {
   "name": "archiwright",
-  "version": "0.1.2",
-  "description": "A context gauge (yellow at 300K, red at 500K on a 1M window) and a handoff skill that carries work into a fresh session.",
+  "version": "0.1.3",
+  "description": "A context gauge (yellow at 500K, red at 700K on a 1M window) and a handoff skill that carries work into a fresh session.",
   "author": { "name": "Archiwright" },
   "license": "MIT",
   "types": "./types/index.d.ts"

@@ -28,11 +28,11 @@ Check that `claude --version` is 2.1.289 or newer, and run `claude update` if it
 
 | Colour | On a 1M window | On a 200K window | What it says |
 |---|---|---|---|
-| Green | under 300K | under 60K | the reading |
-| Yellow | 300K | 60K | wrap up soon |
-| Red | 500K | 100K | run `/archiwright:handoff` |
+| Green | under 500K | under 100K | the reading |
+| Yellow | 500K | 100K | wrap up soon |
+| Red | 700K | 140K | run `/archiwright:handoff` |
 
-The lines are 30% and 50% of the window. They are our rule: nobody has measured where a model starts getting worse, so change them if your experience differs.
+The lines are 50% and 70% of the window. They are our rule: nobody has measured where a model starts getting worse, so change them if your experience differs.
 
 The model cannot see its own usage, so each time a line is crossed the plugin tells it once, and it tells you. That costs about 60 tokens.
 
@@ -45,11 +45,7 @@ Nothing clears unless you press it. To get back to the old session, use `/resume
 
 If subagents are working, the button waits for them and then hands off, so their reports go into the file. Press again to hand off right away. Background scripts and watchers are listed in the file and keep running after the clear.
 
-**The skill.** `/archiwright:handoff` on its own writes `HANDOFF.md` in the project root and stops, so you can read it first. It looks at the real state before writing and marks anything it did not check as `ASSUMED`. The next session runs only the checks its next step depends on, so resuming stays cheap. To continue, say:
-
-```
-Read HANDOFF.md and continue
-```
+**The command.** `/archiwright:handoff` does the same as the button, at any time, and anything you type after it tells the next session what to focus on. It looks at the real state before writing `HANDOFF.md` in the project root, marks anything it did not check as `ASSUMED`, then clears and continues by itself. The next session runs only the checks its next step depends on, so resuming stays cheap. If subagents are working it waits for them first, and running the command again hands off right away.
 
 ## Requirements
 

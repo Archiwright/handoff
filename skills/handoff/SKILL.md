@@ -50,8 +50,4 @@ Only in a git repository: add `HANDOFF.md` to `.git/info/exclude` if it is not a
 
 ## 4. Tell the person
 
-Say in plain words:
-
-1. It is saved, and what you could not check.
-2. If the session is not clearing by itself, read the file first, because they are the only one who can spot a wrong claim. Then use the button above the prompt, or run `/clear`, or open a new session in this folder, and say: `Read HANDOFF.md and continue`.
-3. If anything is listed under Running, stay in this window: a clear keeps it running, but exiting stops it unless they choose "Move to background and exit", and a subagent's work can still be lost that way.
+Say in one or two lines that it is saved and what you could not check. Then add: if this session does not clear by itself, run `/clear` in this window and say `Read HANDOFF.md and continue`, because exiting stops anything still running.

@@ -3,11 +3,12 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import type { Level, Reading } from '../types'
 
-// Shares of the context window. On a 1M window: 300K and 500K.
-const YELLOW_AT = 0.3
-const RED_AT = 0.5
+// Shares of the context window. On a 1M window: 500K and 700K.
+const YELLOW_AT = 0.5
+const RED_AT = 0.7
 
 const COMMAND = '/archiwright:handoff'
+const NAME = COMMAND.slice(1)
 const FILE = 'HANDOFF.md'
 const PICKUP = 'Read HANDOFF.md and continue'
 const CHAIN_NOTE = `This session clears itself as soon as you finish. End with one short line, and do not tell the person to read the file, clear or start a new session.`
@@ -20,6 +21,7 @@ const pendingSince = atom({ plugin: 'archiwright', key: 'pendingSince' } as cons
 const waiting = atom({ plugin: 'archiwright', key: 'waiting' } as const, false)
 const agentCount = atom({ plugin: 'archiwright', key: 'agentCount' } as const, 0)
 const skillStarted = atom({ plugin: 'archiwright', key: 'skillStarted' } as const, false)
+const focus = atom({ plugin: 'archiwright', key: 'focus' } as const, '')
 
 const RANK: Record<Level, number> = { green: 0, yellow: 1, red: 2 }
 
@@ -86,8 +88,10 @@ async function writeThenClear($: EngineInterface) {
   await update($, pendingSince, () => now)
   await update($, skillStarted, () => false)
   $.ui.toast('Writing ' + FILE + ', then clearing')
+  const args = await read($, focus)
+  await update($, focus, () => '')
   void $.command
-    .run({ command: COMMAND.slice(1) })
+    .run({ command: NAME, args })
     .catch((error: Error) => $.ui.toast(`Could not run the handoff: ${error.message}`))
 }
 
@@ -167,7 +171,21 @@ export const register: Register = on => {
 
   // The model cannot see its own usage. Tell it once per line crossed, so it can tell the person.
   on('prompt.submit', async ($, e, next) => {
-    if (e.command?.name === COMMAND.slice(1) && (await read($, pendingSince)) !== null) {
+    if (e.command?.name === NAME) {
+      // Typed by a person: the same one action as the button. Typing it again while waiting hands off now.
+      if ((await read($, pendingSince)) === null) {
+        const count = await unfinishedAgents($)
+        if (count > 0 && !(await read($, waiting))) {
+          const args = e.command.args
+          await update($, focus, () => args)
+          await update($, agentCount, () => count)
+          await update($, waiting, () => true)
+          return { drop: 'Waiting for subagents, then handing off' }
+        }
+        const now = await $.clock.now()
+        await update($, waiting, () => false)
+        await update($, pendingSince, () => now)
+      }
       await update($, skillStarted, () => true)
       return next({ ...e, context: [...(e.context ?? []), CHAIN_NOTE] })
     }
