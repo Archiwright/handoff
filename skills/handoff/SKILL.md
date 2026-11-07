@@ -25,7 +25,9 @@ You are probably deep into a long session, so your memory of it is the least rel
 
 Start the file with this line, exactly:
 
-> You are continuing work from an earlier session. If this file has a "Written at" line, run `git rev-parse --short HEAD; git status --short | wc -l` and compare. Run the checks listed under Next step, nothing else. Open pointers only when the work needs them. If anything differs or fails, say so before acting. Then tell the person in two sentences where things stand and what you will do next, including anything only they can do.
+```
+You are continuing work from an earlier session. If this file has a "Written at" line, run `git rev-parse --short HEAD; git status --short | wc -l` and compare. Run the checks listed under Next step, nothing else. Open pointers only when the work needs them. If anything differs or fails, say so before acting. Then tell the person in two sentences where things stand and what you will do next, including anything only they can do.
+```
 
 Then these sections, in order. Leave out any that have nothing in them.
 
@@ -46,8 +48,8 @@ Never write API keys, passwords, tokens or personal data into the file.
 
 ## 3. Keep it out of git
 
-Only in a git repository: add `.archiwright/` to `.git/info/exclude` if it is not already covered, so handoffs cannot be committed by accident. This changes no tracked file. Leave `.gitignore` alone.
+Only in a git repository: add `.archiwright/` to the file that `git rev-parse --git-path info/exclude` names, if it is not already covered, so handoffs cannot be committed by accident. This changes no tracked file. Leave `.gitignore` alone.
 
 ## 4. Tell the person
 
-Say in one or two lines that it is saved and what you could not check. Then add: if this session does not clear by itself, run `/clear` in this window and say `Read .archiwright/handoffs/${CLAUDE_SESSION_ID}.md and continue`, because exiting stops anything still running.
+Say in one or two lines that it is saved and what you could not check. Unless you were told this session clears itself, then add: if it does not clear by itself, run `/clear` in this window and say `Read .archiwright/handoffs/${CLAUDE_SESSION_ID}.md and continue`, because exiting stops anything still running.

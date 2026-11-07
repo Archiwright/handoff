@@ -25,6 +25,7 @@ const RANK: Record<Level, number> = { green: 0, yellow: 1, red: 2 }
 
 const UNFINISHED = ['pending', 'running', 'waiting']
 const PERSON = ['composer', 'bridge', 'sdk']
+const ARM_MS = 5000
 
 const levelOf = (tokens: number, window: number): Level => {
   if (tokens >= window * RED_AT) return 'red'
@@ -88,7 +89,7 @@ async function clearAndContinue($: EngineInterface) {
   $.ui.toast('Clearing, then continuing')
   void $.command
     .run({ command: 'clear' })
-    .then(() => $.prompt.submit({ text }))
+    .then(() => $.prompt.submit({ text, asUser: true }))
     .catch((error: Error) => $.ui.toast(`Could not clear: ${error.message}`))
 }
 
@@ -133,6 +134,7 @@ async function press($: EngineInterface, surface: string) {
     return
   }
   await update($, armed, () => true)
+  $.clock.after(ARM_MS, () => void update($, armed, () => false))
 }
 
 export const register: Register = on => {
@@ -144,8 +146,8 @@ export const register: Register = on => {
 
   on('turn.complete', async ($, e, next) => {
     const result = await next(e)
-    await refresh($)
     if (e.agentId !== undefined) return result
+    await refresh($)
     await update($, armed, () => false)
 
     // A finished subagent's report starts a main turn, so by here it is in the conversation. Write a fresh file that includes it.
@@ -157,7 +159,12 @@ export const register: Register = on => {
 
     // Clear once the skill has finished or the file is newer than the request. The skill may keep a file that is still right.
     const since = await read($, pendingSince)
-    if (since !== null) {
+    if (since !== null && e.reason !== 'answer') {
+      // Interrupted or failed: never clear on a turn that did not finish.
+      await update($, pendingSince, () => null)
+      await update($, skillStarted, () => false)
+      $.ui.toast('Handoff stopped, the session was not cleared')
+    } else if (since !== null) {
       const written = await $.fs.stat(await handoffPath($)).catch(() => null)
       const isNewer = written !== null && written.mtimeMs >= since
       if (isNewer || (await read($, skillStarted))) {
@@ -173,7 +180,7 @@ export const register: Register = on => {
   // A long turn fills the window between prompts, so keep the gauge moving.
   on('tool.call', async ($, e, next) => {
     const result = await next(e)
-    await refresh($)
+    if (e.agentId === undefined) await refresh($)
     return result
   })
 
@@ -203,6 +210,9 @@ export const register: Register = on => {
 
     // Subagent reports and notifications also arrive as prompts. Only a person's prompt cancels a handoff.
     if (PERSON.includes(e.origin?.kind)) {
+      if ((await read($, waiting)) || (await read($, pendingSince)) !== null) {
+        $.ui.toast(`Handoff cancelled by your message. Run ${COMMAND} again when ready.`)
+      }
       await update($, pendingSince, () => null)
       await update($, waiting, () => false)
       await update($, armed, () => false)
