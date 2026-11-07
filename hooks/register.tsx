@@ -22,6 +22,7 @@ const agentCount = atom({ plugin: 'archiwright', key: 'agentCount' } as const, 0
 const RANK: Record<Level, number> = { green: 0, yellow: 1, red: 2 }
 
 const UNFINISHED = ['pending', 'running', 'waiting']
+const PERSON = ['composer', 'bridge', 'sdk']
 
 const levelOf = (tokens: number, window: number): Level => {
   if (tokens >= window * RED_AT) return 'red'
@@ -161,8 +162,8 @@ export const register: Register = on => {
   on('prompt.submit', async ($, e, next) => {
     if (e.command || e.isMeta) return next(e)
 
-    // A subagent's notification also arrives as a prompt. Only a person's prompt cancels a handoff.
-    if (e.origin.kind !== 'task-notification') {
+    // Subagent reports and notifications also arrive as prompts. Only a person's prompt cancels a handoff.
+    if (PERSON.includes(e.origin?.kind)) {
       await update($, pendingSince, () => null)
       await update($, waiting, () => false)
       await update($, armed, () => false)

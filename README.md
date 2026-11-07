@@ -20,7 +20,7 @@ In the desktop app, click + next to the prompt box, then Plugins, Add marketplac
 
 ### For an agent asked to install this
 
-Run the shell command above, then tell the person to start a new session. There is nothing else to set up.
+Check that `claude --version` is 2.1.289 or newer, and run `claude update` if it is not. Run the shell command above, then tell the person to start a new session. There is nothing else to set up.
 
 ## What you get
 
@@ -38,7 +38,7 @@ The model cannot see its own usage, so each time a line is crossed the plugin te
 
 **The button.** Once the gauge is yellow or red, one action writes the handoff, clears the session and continues in the fresh one.
 
-- Terminal: `Press 0 to hand off in a new session`, then press 0 again. Asking twice means a stray digit cannot wipe a session.
+- Terminal: `Press 0 to hand off in a new session`, then press 0 again. Asking twice means a stray digit cannot wipe a session, and the key only counts while the prompt is empty, so normal typing is not affected.
 - Desktop: `Click to hand off in a new session`.
 
 Nothing clears unless you press it. To get back to the old session, use `/resume`.
@@ -53,7 +53,7 @@ Read HANDOFF.md and continue
 
 ## Requirements
 
-A Claude Code build with function-hook plugins, which are in early access. Git is optional: if the project uses it, the handoff adds a small check and keeps the file out of commits.
+Claude Code 2.1.289 or newer. Check with `claude --version`, and run `claude update` if yours is older. Git is optional: if the project uses it, the handoff adds a small check and keeps the file out of commits.
 
 ## Credits
 
