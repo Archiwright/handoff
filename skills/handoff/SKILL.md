@@ -7,7 +7,7 @@ argument-hint: "[what the next session should focus on]"
 
 # Handoff
 
-Write `HANDOFF.md` in the project root so a fresh session, knowing nothing, can continue this work. If the person passed arguments, they say what the next session will focus on: tailor the file to that.
+Write `.archiwright/handoffs/${CLAUDE_SESSION_ID}.md` in the project so a fresh session, knowing nothing, can continue this work. Every session has its own file, so never touch another session's. If the person passed arguments, they say what the next session will focus on: tailor the file to that.
 
 Test every line: without it, would the next session get something wrong or redo work, and could it not find this out cheaply? If not, leave it out. There is no length limit, because a big project can need a long file, but never copy what already exists elsewhere. Point to specs, plans, issues and code by path or URL.
 
@@ -18,7 +18,7 @@ You are probably deep into a long session, so your memory of it is the least rel
 - Open the files you are about to mention and confirm they say what you remember.
 - Re-run a test only if you are about to claim it passes and it is quick.
 - Find what is still running: subagents, background shells, scripts and servers. Do not rely on memory: use a tool that lists them if you have one, such as `ListAgents`, and say so in the file if you could not check. Include only what this work started: other sessions on the machine do not belong in the file.
-- If `HANDOFF.md` already exists, read it and carry forward anything still open.
+- If this session's file already exists, or this session started from an earlier handoff, carry forward anything still open.
 - Only in a git repository, run `git branch --show-current; git rev-parse --short HEAD; git status --short | wc -l` for the "Written at" line. Nothing else here needs git.
 
 ## 2. Write the file
@@ -46,8 +46,8 @@ Never write API keys, passwords, tokens or personal data into the file.
 
 ## 3. Keep it out of git
 
-Only in a git repository: add `HANDOFF.md` to `.git/info/exclude` if it is not already covered, so it cannot be committed by accident. This changes no tracked file. Leave `.gitignore` alone.
+Only in a git repository: add `.archiwright/` to `.git/info/exclude` if it is not already covered, so handoffs cannot be committed by accident. This changes no tracked file. Leave `.gitignore` alone.
 
 ## 4. Tell the person
 
-Say in one or two lines that it is saved and what you could not check. Then add: if this session does not clear by itself, run `/clear` in this window and say `Read HANDOFF.md and continue`, because exiting stops anything still running.
+Say in one or two lines that it is saved and what you could not check. Then add: if this session does not clear by itself, run `/clear` in this window and say `Read .archiwright/handoffs/${CLAUDE_SESSION_ID}.md and continue`, because exiting stops anything still running.

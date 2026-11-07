@@ -45,7 +45,7 @@ Nothing clears unless you press it. To get back to the old session, use `/resume
 
 If subagents are working, the button waits for them and then hands off, so their reports go into the file. Press again to hand off right away. Background scripts and watchers are listed in the file and keep running after the clear.
 
-**The command.** `/archiwright:handoff` does the same as the button, at any time, and anything you type after it tells the next session what to focus on. It looks at the real state before writing `HANDOFF.md` in the project root, marks anything it did not check as `ASSUMED`, then clears and continues by itself. The next session runs only the checks its next step depends on, so resuming stays cheap. If subagents are working it waits for them first, and running the command again hands off right away.
+**The command.** `/archiwright:handoff` does the same as the button, at any time, and anything you type after it tells the next session what to focus on. It looks at the real state before writing the handoff to `.archiwright/handoffs/`, with one file per session so sessions in the same project never overwrite each other. It marks anything it did not check as `ASSUMED`, then clears and continues by itself. The next session runs only the checks its next step depends on, so resuming stays cheap. If subagents are working it waits for them first, and running the command again hands off right away.
 
 ## Requirements
 

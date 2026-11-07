@@ -9,9 +9,7 @@ const RED_AT = 0.7
 
 const COMMAND = '/archiwright:handoff'
 const NAME = COMMAND.slice(1)
-const FILE = 'HANDOFF.md'
-const PICKUP = 'Read HANDOFF.md and continue'
-const CHAIN_NOTE = `This session clears itself as soon as you finish. End with one short line, and do not tell the person to read the file, clear or start a new session.`
+const FOLDER = '.archiwright/handoffs'
 
 const reading = atom({ plugin: 'archiwright', key: 'reading' } as const, null)
 const told = atom({ plugin: 'archiwright', key: 'told' } as const, 'green')
@@ -34,12 +32,20 @@ const levelOf = (tokens: number, window: number): Level => {
   return 'green'
 }
 
+const chainNote = (path: string) =>
+  `Write the handoff to exactly ${path}. This session clears itself as soon as you finish. End with one short line, and do not tell the person to read the file, clear or start a new session.`
+
 const short = (tokens: number) => `${Math.round(tokens / 1000)}K`
 
 const advice = (r: Reading) => {
   if (r.level === 'red') return `${short(r.tokens)} context: run ${COMMAND}`
   if (r.level === 'yellow') return `${short(r.tokens)} context: wrap up soon`
   return `${short(r.tokens)} context`
+}
+
+// One file per session, so sessions in the same project cannot touch each other's work.
+async function handoffPath($: EngineInterface) {
+  return `${FOLDER}/${await $.session.id()}.md`
 }
 
 async function refresh($: EngineInterface) {
@@ -58,9 +64,9 @@ async function refresh($: EngineInterface) {
   const level = now?.level ?? 'green'
   if (RANK[level] < RANK[await read($, told)]) await update($, told, () => level)
 
-  // A handoff written during this session can be picked up. A clear restarts startedAt, so this resets itself.
-  const written = await $.fs.stat(FILE).catch(() => null)
-  const isReady = written !== null && written.mtimeMs >= usage.startedAt
+  // A handoff written by this session can be picked up. A clear starts a new session id, so this resets itself.
+  const written = await $.fs.stat(await handoffPath($)).catch(() => null)
+  const isReady = written !== null
   await update($, ready, () => isReady)
   if (await read($, waiting)) {
     const count = await unfinishedAgents($)
@@ -77,8 +83,9 @@ async function unfinishedAgents($: EngineInterface) {
 async function clearAndContinue($: EngineInterface) {
   const message = await read($, focus)
   await update($, focus, () => '')
-  const text = message ? `${PICKUP}. User handoff message: ${message}` : PICKUP
-  $.ui.toast('Clearing, then reading ' + FILE)
+  const pickup = `Read ${await handoffPath($)} and continue`
+  const text = message ? `${pickup}. User handoff message: ${message}` : pickup
+  $.ui.toast('Clearing, then continuing')
   void $.command
     .run({ command: 'clear' })
     .then(() => $.prompt.submit({ text }))
@@ -90,7 +97,7 @@ async function writeThenClear($: EngineInterface) {
   const now = await $.clock.now()
   await update($, pendingSince, () => now)
   await update($, skillStarted, () => false)
-  $.ui.toast('Writing ' + FILE + ', then clearing')
+  $.ui.toast('Writing the handoff, then clearing')
   const args = await read($, focus)
   void $.command
     .run({ command: NAME, args })
@@ -151,13 +158,13 @@ export const register: Register = on => {
     // Clear once the skill has finished or the file is newer than the request. The skill may keep a file that is still right.
     const since = await read($, pendingSince)
     if (since !== null) {
-      const written = await $.fs.stat(FILE).catch(() => null)
+      const written = await $.fs.stat(await handoffPath($)).catch(() => null)
       const isNewer = written !== null && written.mtimeMs >= since
       if (isNewer || (await read($, skillStarted))) {
         await update($, pendingSince, () => null)
         await update($, skillStarted, () => false)
         if (written !== null) await clearAndContinue($)
-        else $.ui.toast(`${FILE} was not written, so the session was not cleared`)
+        else $.ui.toast('The handoff was not written, so the session was not cleared')
       }
     }
     return result
@@ -190,7 +197,7 @@ export const register: Register = on => {
         await update($, pendingSince, () => now)
       }
       await update($, skillStarted, () => true)
-      return next({ ...e, context: [...(e.context ?? []), CHAIN_NOTE] })
+      return next({ ...e, context: [...(e.context ?? []), chainNote(await handoffPath($))] })
     }
     if (e.command || e.isMeta) return next(e)
 
