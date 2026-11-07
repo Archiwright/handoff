@@ -10,6 +10,7 @@ const RED_AT = 0.5
 const COMMAND = '/archiwright:handoff'
 const FILE = 'HANDOFF.md'
 const PICKUP = 'Read HANDOFF.md and continue'
+const CHAIN_NOTE = `This session clears itself as soon as you finish. End with one short line, and do not tell the person to read the file, clear or start a new session.`
 
 const reading = atom({ plugin: 'archiwright', key: 'reading' } as const, null)
 const told = atom({ plugin: 'archiwright', key: 'told' } as const, 'green')
@@ -18,6 +19,7 @@ const armed = atom({ plugin: 'archiwright', key: 'armed' } as const, false)
 const pendingSince = atom({ plugin: 'archiwright', key: 'pendingSince' } as const, null)
 const waiting = atom({ plugin: 'archiwright', key: 'waiting' } as const, false)
 const agentCount = atom({ plugin: 'archiwright', key: 'agentCount' } as const, 0)
+const skillStarted = atom({ plugin: 'archiwright', key: 'skillStarted' } as const, false)
 
 const RANK: Record<Level, number> = { green: 0, yellow: 1, red: 2 }
 
@@ -82,6 +84,7 @@ function clearAndContinue($: EngineInterface) {
 async function writeThenClear($: EngineInterface) {
   const now = await $.clock.now()
   await update($, pendingSince, () => now)
+  await update($, skillStarted, () => false)
   $.ui.toast('Writing ' + FILE + ', then clearing')
   void $.command
     .run({ command: COMMAND.slice(1) })
@@ -139,13 +142,17 @@ export const register: Register = on => {
       return result
     }
 
-    // Clear only once the file is really newer than the request. Otherwise keep waiting: a person's next prompt cancels.
+    // Clear once the skill has finished or the file is newer than the request. The skill may keep a file that is still right.
     const since = await read($, pendingSince)
     if (since !== null) {
       const written = await $.fs.stat(FILE).catch(() => null)
-      if (written !== null && written.mtimeMs >= since) {
+      const isNewer = written !== null && written.mtimeMs >= since
+      if (isNewer || (await read($, skillStarted))) {
         await update($, pendingSince, () => null)
-        clearAndContinue($)
+        await update($, skillStarted, () => false)
+        const { startedAt } = await $.session.usage()
+        if (written !== null && written.mtimeMs >= startedAt) clearAndContinue($)
+        else $.ui.toast(`${FILE} was not written, so the session was not cleared`)
       }
     }
     return result
@@ -160,6 +167,10 @@ export const register: Register = on => {
 
   // The model cannot see its own usage. Tell it once per line crossed, so it can tell the person.
   on('prompt.submit', async ($, e, next) => {
+    if (e.command?.name === COMMAND.slice(1) && (await read($, pendingSince)) !== null) {
+      await update($, skillStarted, () => true)
+      return next({ ...e, context: [...(e.context ?? []), CHAIN_NOTE] })
+    }
     if (e.command || e.isMeta) return next(e)
 
     // Subagent reports and notifications also arrive as prompts. Only a person's prompt cancels a handoff.
