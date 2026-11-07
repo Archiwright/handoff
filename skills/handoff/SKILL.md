@@ -52,4 +52,4 @@ Only in a git repository: add `.archiwright/` to the file that `git rev-parse --
 
 ## 4. Tell the person
 
-Say in one or two lines that it is saved and what you could not check. Unless you were told this session clears itself, then add: if it does not clear by itself, run `/clear` in this window and say `Read .archiwright/handoffs/${CLAUDE_SESSION_ID}.md and continue`, because exiting stops anything still running.
+Say in one or two lines that it is saved and what you could not check. If you were not told this session clears itself, add: if it does not clear by itself, run `/clear` in this window and say `Read .archiwright/handoffs/${CLAUDE_SESSION_ID}.md and continue`, because exiting stops anything still running.

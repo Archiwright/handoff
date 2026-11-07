@@ -20,7 +20,7 @@ In the desktop app, click + next to the prompt box, then Plugins, Add marketplac
 
 ### For an agent asked to install this
 
-Check that `claude --version` is 2.1.289 or newer, and run `claude update` if it is not. Run the shell command above, then tell the person to start a new session. There is nothing else to set up.
+Check that `claude --version` is 2.1.300 or newer, and run `claude update` if it is not. Run the shell command above, then tell the person to start a new session. There is nothing else to set up.
 
 ## What you get
 
@@ -47,9 +47,11 @@ If subagents are working, the button waits for them and then hands off, so their
 
 **The command.** `/archiwright:handoff` does the same as the button, at any time, and anything you type after it tells the next session what to focus on. It looks at the real state before writing the handoff to `.archiwright/handoffs/`, with one file per session so sessions in the same project never overwrite each other. It marks anything it did not check as `ASSUMED`, then clears and continues by itself. The next session runs only the checks its next step depends on, so resuming stays cheap. If subagents are working it waits for them first, and running the command again hands off right away.
 
+Handoff files stay in `.archiwright/handoffs/`. They are small, nothing removes them, and the folder is safe to empty once the next session has started.
+
 ## Requirements
 
-Claude Code 2.1.289 or newer. Check with `claude --version`, and run `claude update` if yours is older. Git is optional: if the project uses it, the handoff adds a small check and keeps the file out of commits.
+Claude Code 2.1.300 or newer. Check with `claude --version`, and run `claude update` if yours is older. Git is optional: if the project uses it, the handoff adds a small check and keeps the file out of commits.
 
 ## Credits
 
